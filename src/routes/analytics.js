@@ -3,13 +3,16 @@ const router = express.Router();
 const { query } = require("../db");
 
 router.get("/revenue", async (req, res) => {
+  const start = Date.now();
   const result = await query(
     "SELECT SUM(amount_cents)/100.0 AS total_revenue FROM payments",
   );
-  res.json(result.rows[0]);
+  const duration = Date.now() - start;
+  res.json({ execution_ms: duration, data: result.rows[0] });
 });
 
 router.get("/revenue/users", async (req, res) => {
+  const start = Date.now();
   const result = await query(`
     SELECT u.id, u.email, SUM(p.amount_cents)/100.0 AS total_spent
     FROM users u
@@ -19,7 +22,9 @@ router.get("/revenue/users", async (req, res) => {
     ORDER BY total_spent DESC
     LIMIT 10
   `);
-  res.json(result.rows);
+  const duration = Date.now() - start;
+  console.log(`[Analytics] /revenue/users executed in ${duration}ms`);
+  res.json({ execution_ms: duration, data: result.rows });
 });
 
 router.get("/orders/status", async (req, res) => {
