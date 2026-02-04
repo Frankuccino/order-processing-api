@@ -41,20 +41,20 @@ validators/ # Input validation
 
 ### 1. **Clone the repo**
 
-```bash
-git clone <your-repo-url>
+```zsh
+git clone https://github.com/Frankuccino/order-processing-api.git
 cd order-processing-api
 ```
 
 ### 2. **Install dependencies**
 
-```
+```zsh
 pnpm install
 ```
 
 ### 3. Set up PostgreSQL database
 
-```
+```zsh
 createdb order_system
 psql order_system
 \i src/db/schema.sql
@@ -62,19 +62,19 @@ psql order_system
 
 ### 4. Create `.env` file in the root:
 
-```
+```zsh
 DATABASE_URL=postgres://<your_pg_user>/order_system
 ```
 
 ### 5. Seed database
 
-```
+```zsh
 pnpm exec node src/db/seed.js
 ```
 
 ### 6. Run Server
 
-```
+```zsh
 pnpm run dev
 ```
 
