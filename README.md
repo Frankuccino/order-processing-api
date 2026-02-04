@@ -22,18 +22,18 @@ The goal is to **generate measurable engineering metrics** while practicing SQL,
 
 ## Project Structure
 
-> src/.  
-> app.js # Express app.  
-> server.js # Server entry point.  
-> db/
->
-> > index.js # Database connection  
-> > schema.sql # Database schema  
-> > seed.js # Seed script
->
-> routes/ # API routes  
-> services/ # Business logic layer  
-> validators/ # Input validation
+```
+src/.
+app.js # Express app.
+server.js # Server entry point.
+  db/
+  index.js # Database connection
+  schema.sql # Database schema
+  seed.js # Seed script
+routes/ # API routes
+services/ # Business logic layer
+validators/ # Input validation
+```
 
 ---
 
