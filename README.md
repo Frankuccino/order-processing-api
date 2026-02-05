@@ -9,6 +9,25 @@ Focus is on performance, analytics, and business logic, generating measurable en
 
 ---
 
+## Project Status
+
+- ✅ Step 0: Project skeleton & environment setup
+- ✅ Step 1: Database schema created
+- ✅ Step 2: Seeded 2,000 users, 10,000 orders, 29,855 order items, 5,047 payments
+- ✅ Step 3: Business logic (order lifecycle rules) & Order endpoints
+- ✅ Step 4: Analytics endpoints added (revenue, top users, order status, top products)
+  - ✅ Step 4-A: Performance & Indexing (REAL numbers)
+  - ✅ Step 4-B Metrics + Stress Testing
+- Step 5: Database Transactions & Data Integrity
+- Step 6: Database Constraints & Defensive Design
+- Step 7: Query Analysis & Performance Validation
+- Step 8: Advanced Metrics (Optional Extension)
+
+This project progresses from:
+Data → Correctness → Insight → Reliability → Performance
+
+---
+
 ## Tech Stack
 
 - Node.js + Express — API server
@@ -70,22 +89,103 @@ psql order_system
 
 ---
 
-## Project Status
+## Database Schema & Table Types
 
-- ✅ Step 0: Project skeleton & environment setup
-- ✅ Step 1: Database schema created
-- ✅ Step 2: Seeded 2,000 users, 10,000 orders, 29,855 order items, 5,047 payments
-- ⚙️ Step 3: Business logic (order lifecycle rules) — in progress
-- ⚙️ Step 4: Analytics endpoints added (revenue, top users, order status, top products)
+This project uses a normalized relational schema designed to model real-world e-commerce order processing while preserving historical and financial correctness.
+
+### `users` — Entity Table
+
+Represents customers in the system.
+
+- One user can place many orders
+- Stores identity and role information
+- Acts as a root entity for business actions
 
 ---
+
+### `products` — Entity / Catalog Table
+
+Represents the product catalog.
+
+- Stores product metadata and current pricing
+- Prices here are mutable
+- Not directly tied to historical purchases
+
+---
+
+### `orders` — Transactional Table
+
+Represents a checkout event (intent to purchase).
+
+- Belongs to a single user
+- Tracks order lifecycle via status:
+- `CREATED → PAID → SHIPPED → COMPLETED`
+- Stores `total_cents` as a cached aggregate
+  > Orders model business intent, not payment.
+
+---
+
+### `order_items` — Junction Table (with Attributes)
+
+Connects orders and products while storing purchase-specific data.
+
+- Resolves the many-to-many relationship between:
+  - orders
+  - products
+- Stores:
+  - order_id
+  - product_id
+  - quantity
+  - price_cents (snapshot at purchase time)
+    > This is a **junction table with attributes**, not just IDs — it captures historical pricing and quantities.
+
+---
+
+#### `payments` — Transactional / Financial Table
+
+Represents financial transactions.
+
+- References a single order
+- Enforces business rules:
+- Orders cannot be shipped unless paid
+
+- Decoupled from orders to model payment as a separate business event
+
+---
+
+### Relationship Summary
+
+- users → orders: one-to-many
+- orders → order_items: one-to-many
+- products → order_items: one-to-many
+- orders → payments: one-to-one (by design)
+
+### Design Rationale
+
+- Junction table with attributes preserves historical pricing
+- Transactional separation keeps payments independent of order intent
+- Aggregated totals reduce expensive runtime computations
+- Schema mirrors real-world commerce systems
+
+---
+
+## Order Endpoints
+
+| Method - Endpoint         |                          Description |
+| :------------------------ | -----------------------------------: |
+| POST /orders              |  Create a new order with order items |
+| POST /orders/:id/pay      | Mark order as paid (creates payment) |
+| POST /orders/:id/ship     |          Transition order to shipped |
+| POST /orders/:id/complete |                    Complete an order |
+
+> These endpoints enforce business invariants (e.g., an order cannot be shipped unless paid).
 
 ## Analytics Endpoints
 
 | Endpoint                     |                      Description |
 | :--------------------------- | -------------------------------: |
 | GET /analytics/revenue Total |        revenue from all payments |
-| ET /analytics/revenue/users  |   Top 10 users by total spending |
+| GET /analytics/revenue/users |   Top 10 users by total spending |
 | GET /analytics/orders/status |       Count of orders per status |
 | GET /analytics/products/top  | Top 10 products by quantity sold |
 
@@ -207,18 +307,3 @@ Average time per order: 1.33 ms
 | `/analytics/products/top`  | 3 ms           | Top 3 products:<br>• Handcrafted Plastic Keyboard — 1318 sold<br>• Recycled Gold Bacon — 1313 sold<br>• Handcrafted Steel Computer — 1306 sold                                                                              |
 
 > These numbers demonstrate sub-millisecond order processing and fast aggregation queries even with thousands of records, showing proper indexing and efficient SQL joins in action.
-
-# Next Steps
-
-1. Business Logic / Transactions
-
-- Atomic creation of orders, items, and payments
-- Input validation and invariants
-
-2. Performance Measurement
-
-- Capture EXPLAIN ANALYZE metrics for heavy queries
-
-3. Resume-ready Metrics
-
-- Include execution times, row counts, and optimizations
